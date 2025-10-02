@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Thunderply — Search jobs with AI." />
   <title>Thunderply — Get Started</title>
+  <!-- keep your pathing -->
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <!-- Top bar matches the landing header style -->
+  <!-- Top bar -->
   <header class="header">
     <div class="container nav">
       <a href="index.html" class="brand" aria-label="Thunderply Home">
@@ -35,15 +36,17 @@
     </div>
   </header>
 
-  <main id="main" class="container" style="padding: 40px 0 445px;">
+  <main id="main" class="container" style="padding: 40px 0 60px;">
     <section class="hero" style="padding-top: 20px;">
       <h1 class="hero-title">Kick off your search</h1>
-      <p class="lead">Click the button to query Thunderply’s AI engine. Results appear below.</p>
+      <p class="lead">
+        We’ll load your most recent results automatically. Click <em>Search Jobs</em> to run a fresh search and then reload the latest set.
+      </p>
 
-      <!-- Search button -->
+      <!-- Actions -->
       <div style="display:flex; gap:10px; flex-wrap: wrap;">
         <button id="searchBtn" class="btn-primary">Search Jobs</button>
-        <!-- Optional: simple filter placeholders you can wire up later -->
+        <button class="ghost" id="refreshBtn" title="Reload latest results">Refresh</button>
         <button class="ghost" id="clearBtn" title="Clear results">Clear</button>
       </div>
     </section>
@@ -55,7 +58,7 @@
 
       <!-- Cards container -->
       <div id="results" class="grid" style="grid-template-columns: 1fr; gap: 12px;">
-        <!-- Job cards injected here by get-started.js -->
+        <!-- Job cards injected by get-started.js -->
       </div>
     </section>
   </main>
@@ -75,6 +78,7 @@
     </div>
   </footer>
 
+  <!-- keep your pathing -->
   <script src="js/get-started.js"></script>
 </body>
 </html>
