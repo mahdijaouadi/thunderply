@@ -45,7 +45,7 @@ class JobPostsRepository:
         for job in jobs:
             apply_url = job.get("apply_url") or job.get("applyUrl")
             job_information=job.get("job_information") or {}
-            company_name=job.get("company") or {}
+            company_name=job.get("v5_processed_company_data",{}).get("name","Unknown Company")
             job_posts.append(JobPost(
                 job_information= job_information,
                 apply_url= apply_url,

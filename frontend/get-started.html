@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Thunderply — Search jobs with AI." />
+  <title>Thunderply — Get Started</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Top bar matches the landing header style -->
+  <header class="header">
+    <div class="container nav">
+      <a href="index.html" class="brand" aria-label="Thunderply Home">
+        <!-- Thunder Logo -->
+        <svg class="logo" width="30" height="30" viewBox="0 0 48 48" aria-hidden="true">
+          <defs>
+            <linearGradient id="boltGradient2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#7c5cff"/>
+              <stop offset="1" stop-color="#30e1ff"/>
+            </linearGradient>
+          </defs>
+          <circle cx="24" cy="24" r="20" fill="none" stroke="url(#boltGradient2)" stroke-width="2" opacity="0.5"/>
+          <path d="M27 5 12 26h10l-5 17 19-23h-10L27 5z" fill="url(#boltGradient2)"/>
+        </svg>
+        <span class="brand-name">Thunderply</span>
+      </a>
+      <div class="nav-right">
+        <a class="ghost" href="index.html#features">Features</a>
+        <a class="ghost" href="index.html#how">How it works</a>
+        <a class="ghost" href="index.html#about">About</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container" style="padding: 40px 0 445px;">
+    <section class="hero" style="padding-top: 20px;">
+      <h1 class="hero-title">Kick off your search</h1>
+      <p class="lead">Click the button to query Thunderply’s AI engine. Results appear below.</p>
+
+      <!-- Search button -->
+      <div style="display:flex; gap:10px; flex-wrap: wrap;">
+        <button id="searchBtn" class="btn-primary">Search Jobs</button>
+        <!-- Optional: simple filter placeholders you can wire up later -->
+        <button class="ghost" id="clearBtn" title="Clear results">Clear</button>
+      </div>
+    </section>
+
+    <!-- Results list (stacked cards) -->
+    <section aria-live="polite" aria-busy="false" id="resultsSection" style="margin-top: 22px;">
+      <!-- Status row -->
+      <div id="status" class="muted" style="min-height: 24px;"></div>
+
+      <!-- Cards container -->
+      <div id="results" class="grid" style="grid-template-columns: 1fr; gap: 12px;">
+        <!-- Job cards injected here by get-started.js -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container foot">
+      <div class="foot-left">
+        <strong>Thunderply</strong>
+        <span aria-hidden="true">•</span>
+        <span>AI-powered global job search</span>
+      </div>
+      <nav class="links" aria-label="Footer">
+        <a href="#" aria-disabled="true">Privacy</a>
+        <a href="#" aria-disabled="true">Terms</a>
+        <a href="#" aria-disabled="true">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="get-started.js"></script>
+</body>
+</html>
