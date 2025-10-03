@@ -22,3 +22,4 @@ beautifulsoup4
 google-cloud-aiplatform
 google-auth
 pypdf
+pymongo

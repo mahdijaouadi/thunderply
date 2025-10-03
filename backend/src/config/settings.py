@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: str = Field(default="pleasechangeme", alias="LANGFUSE_SECRET_KEY")
     langfuse_public_key: str = Field(default="pleasechangeme", alias="LANGFUSE_PUBLIC_KEY")
     lanfuse_host: str = Field(default="pleasechangeme", alias="LANGFUSE_HOST")
+    mongo_db_uri: str = Field(default="pleasechangeme", alias="MONGODB_URI")
 
 
 settings = Settings()

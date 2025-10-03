@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Thunderply — AI-powered global job search. Find the right role, faster." />
+  <title>Thunderply — AI-Powered Global Job Search</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- Accessible skip link -->
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ===== HEADER / NAV ===== -->
+  <header class="header">
+    <div class="container nav">
+      <a href="#" class="brand" aria-label="Thunderply Home">
+        <!-- Thunder Logo (SVG) -->
+        <svg class="logo" width="30" height="30" viewBox="0 0 48 48" aria-hidden="true">
+          <!-- Simple neon thunderbolt inside a soft ring -->
+          <defs>
+            <linearGradient id="boltGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#7c5cff"/>
+              <stop offset="1" stop-color="#30e1ff"/>
+            </linearGradient>
+          </defs>
+          <circle cx="24" cy="24" r="20" fill="none" stroke="url(#boltGradient)" stroke-width="2" opacity="0.5"/>
+          <path d="M27 5 12 26h10l-5 17 19-23h-10L27 5z"
+                fill="url(#boltGradient)"/>
+        </svg>
+        <span class="brand-name">Thunderply</span>
+      </a>
+
+      <div class="nav-right">
+        <a class="ghost" href="#features">Features</a>
+        <a class="ghost" href="#how">How it works</a>
+        <a class="ghost" href="#about">About</a>
+        <a href="get-started.html" class="cta" aria-label="Go to Get Started page">Let’s Get Started</a>
+        <button class="mobile-menu-btn ghost" aria-expanded="false" aria-controls="mobileMenu">Menu</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ===== HERO ===== -->
+    <section class="container hero">
+      <h1 class="reveal hero-title">
+        Find your next role—<span class="gradient-text">anywhere</span> in the world.
+      </h1>
+      <p class="lead reveal">
+        Thunderply helps you discover relevant jobs across the globe using an AI search engine that understands skills, intent, and growth goals—so you spend less time hunting and more time landing offers.
+      </p>
+    </section>
+
+    <!-- ===== FEATURES ===== -->
+    <section id="features" class="container features">
+      <h2 class="reveal">Why Thunderply</h2>
+      <p class="reveal sublead">Built for speed, relevance, and reach.</p>
+
+      <div class="grid">
+        <article class="card reveal">
+          <div class="icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z"/></svg>
+          </div>
+          <h3>AI-smart results</h3>
+          <p>Understands skills and intent, not just keywords—surface roles that fit your trajectory.</p>
+        </article>
+
+        <article class="card reveal">
+          <div class="icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 2c2.5 0 4.7 1.2 6.1 3H5.9C7.3 5.2 9.5 4 12 4m-8 8c0-.7.1-1.3.3-2h15.4c.2.7.3 1.3.3 2s-.1 1.3-.3 2H4.3c-.2-.7-.3-1.3-.3-2m1.9 5h11.6A8 8 0 0 1 12 20a8 8 0 0 1-6.1-3"/></svg>
+          </div>
+          <h3>Worldwide coverage</h3>
+          <p>Search across regions and remote-first employers with normalized metadata.</p>
+        </article>
+
+        <article class="card reveal">
+          <div class="icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M3 7h10v2H3zm8 4h10v2H11zM6 15h12v2H6z"/></svg>
+          </div>
+          <h3>Smart filters</h3>
+          <p>Filter by seniority, tech stack, salary bands, or visa sponsorship in seconds.</p>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ===== HOW IT WORKS ===== -->
+    <section id="how" class="container how">
+      <h2 class="reveal">How it works</h2>
+      <p class="reveal sublead">Three simple steps to your next role.</p>
+
+      <div class="steps">
+        <div class="step reveal">
+          <span class="badge">Step 1</span>
+          <h3>Tell us what you want</h3>
+          <p>Type your skills, target companies, or career goals. Thunderply understands context.</p>
+        </div>
+        <div class="step reveal">
+          <span class="badge">Step 2</span>
+          <h3>AI ranks the web</h3>
+          <p>We unify listings worldwide, de-duplicate, and rank by fit, quality, and freshness.</p>
+        </div>
+        <div class="step reveal">
+          <span class="badge">Step 3</span>
+          <h3>Apply smarter</h3>
+          <p>Use smart filters and insights to prioritize applications that move the needle.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container foot">
+      <div class="foot-left">
+        <strong>Thunderply</strong>
+        <span aria-hidden="true">•</span>
+        <span>AI-powered global job search</span>
+      </div>
+      <nav class="links" aria-label="Footer">
+        <a href="#" aria-disabled="true">Privacy</a>
+        <a href="#" aria-disabled="true">Terms</a>
+        <a href="#" aria-disabled="true">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-from backend.src.adapters.outbound.hiringcafe.job_posts_repository import JobPostsRepository
+from backend.src.adapters.outbound.hiringcafe.job_posts_repository import HiringCafeJobPostsRepository
 
 
 class HiringCafeUnitOfWork:
@@ -6,10 +6,10 @@ class HiringCafeUnitOfWork:
         self.job_posts_repository = None
 
     async def __aenter__(self):
-        self.job_posts_repository = JobPostsRepository()
+        self.job_posts_repository = HiringCafeJobPostsRepository()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb):
+    async def __aexit__(self, exc_type, exc, tb):   
         pass
 
     async def commit(self):

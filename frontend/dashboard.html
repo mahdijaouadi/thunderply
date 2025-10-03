@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Thunderply — Track your job applications" />
+  <title>Thunderply — Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Top bar -->
+  <header class="header">
+    <div class="container nav">
+      <a href="index.html" class="brand" aria-label="Thunderply Home">
+        <svg class="logo" width="30" height="30" viewBox="0 0 48 48" aria-hidden="true">
+          <defs>
+            <linearGradient id="boltGradientDash" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#7c5cff"/>
+              <stop offset="1" stop-color="#30e1ff"/>
+            </linearGradient>
+          </defs>
+          <circle cx="24" cy="24" r="20" fill="none" stroke="url(#boltGradientDash)" stroke-width="2" opacity="0.5"/>
+          <path d="M27 5 12 26h10l-5 17 19-23h-10L27 5z" fill="url(#boltGradientDash)"/>
+        </svg>
+        <span class="brand-name">Thunderply</span>
+      </a>
+      <div class="nav-right">
+        <a class="ghost" href="get-started.html">Search Jobs</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container" style="padding: 40px 0 60px;">
+    <section class="hero" style="padding-top: 20px;">
+      <h1 class="hero-title">Your applications</h1>
+      <p class="lead">Track the roles you've applied to. Click a card to view full details.</p>
+
+      <!-- Optional actions -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+        <button id="seedBtn" class="ghost" title="Reload mock data">Load mock data</button>
+        <button id="clearAllBtn" class="ghost" title="Remove all">Clear all</button>
+      </div>
+    </section>
+
+    <!-- Status + list -->
+    <section id="appsSection" aria-live="polite" aria-busy="false" style="margin-top:22px;">
+      <div id="status" class="muted" style="min-height:24px;"></div>
+
+      <!-- Stacked cards -->
+      <div id="appsList" class="grid" style="grid-template-columns: 1fr; gap: 12px;">
+        <!-- Cards injected by dashboard.js -->
+      </div>
+
+      <!-- Empty state -->
+      <div id="emptyState" class="muted" style="display:none; margin-top:10px;">
+        No applications yet. Use <a class="ghost" href="get-started.html">Search Jobs</a> to find roles and add them here.
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container foot">
+      <div class="foot-left">
+        <strong>Thunderply</strong>
+        <span aria-hidden="true">•</span>
+        <span>AI-powered global job search</span>
+      </div>
+      <nav class="links" aria-label="Footer">
+        <a href="#" aria-disabled="true">Privacy</a>
+        <a href="#" aria-disabled="true">Terms</a>
+        <a href="#" aria-disabled="true">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
