@@ -1,8 +1,7 @@
-/* Thunderply — Job Details page
-   Fixes:
-   - Download PDF uses hidden iframe (avoids popup blocking)
-   - Cover letter editor larger + autosize
-   - Copy + Reset still work; edits persist per job
+/* Thunderply — Job Details page (single-print version)
+   - Editable cover letter (autosave to session for this job)
+   - Copy to clipboard
+   - Download PDF via hidden iframe (no popup blocker), single print call
 */
 
 function getQueryParam(name) {
@@ -170,7 +169,7 @@ function toast(msg) {
   setTimeout(() => el.remove(), 1400);
 }
 
-// Build print-ready HTML (A4)
+// Build print-ready HTML (A4) — **no inline print script here**
 function buildPrintHTML({ coverText, title, company }) {
   const today = new Date().toLocaleDateString(undefined, {
     year: "numeric", month: "long", day: "numeric"
@@ -216,12 +215,11 @@ function buildPrintHTML({ coverText, title, company }) {
       <div>Your Name</div>
     </div>
   </article>
-  <script>window.onload = () => { window.print(); }<\/script>
 </body>
 </html>`;
 }
 
-// Print that HTML through a hidden iframe (avoids popup blocking)
+// Print the HTML through a hidden iframe (single print call, guarded)
 function printHTMLviaIframe(html) {
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
@@ -237,13 +235,15 @@ function printHTMLviaIframe(html) {
   doc.write(html);
   doc.close();
 
-  // Give the browser a tick to render, then print
   iframe.onload = () => {
+    // Guard against double onload events (some browsers)
+    if (iframe.dataset.printed === "1") return;
+    iframe.dataset.printed = "1";
+
     try {
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
     } finally {
-      // remove iframe shortly after
       setTimeout(() => iframe.remove(), 1000);
     }
   };
