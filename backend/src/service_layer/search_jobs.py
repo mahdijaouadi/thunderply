@@ -10,6 +10,7 @@ class SearchJobs:
 
     async def run(self) -> List[JobPost]:
         async with self._uow_factory() as uow:
+            await uow.job_posts_repository.clear_latest_results()
             job_posts= await uow.job_posts_repository.get_job_posts()
             self._logger.info(f"Size of job posts: {len(job_posts)}")
             job_posts= await uow.job_posts_repository.get_relevance_score(job_posts,self.top_k)
