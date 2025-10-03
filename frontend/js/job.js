@@ -1,7 +1,8 @@
-/* Thunderply — Job Details page (direct PDF download)
+/* Thunderply — Job Details page (direct PDF download + save application)
    - Editable cover letter (autosave to session for this job)
    - Copy to clipboard
    - Download a real PDF named "cover_letter.pdf" using pdf-lib (loaded on demand)
+   - NEW: "Applied" button posts to SAVE_APPLICATION_URL
 */
 const SAVE_APPLICATION_URL  = "http://localhost:8328/api/v1/jobs/save_application"; // POST
 
@@ -62,7 +63,10 @@ function relevanceBar(score) {
           <span>${company}</span>
         </div>
       </div>
-      <a class="cta" href="${applyUrl}" target="_blank" rel="noopener noreferrer">Apply</a>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <a class="cta" id="applyLink" href="${applyUrl}" target="_blank" rel="noopener noreferrer">Apply</a>
+        <button class="ghost" id="appliedBtn" type="button" title="Mark as applied">Applied</button>
+      </div>
     </header>
 
     <section style="margin:16px 0 10px;">
@@ -157,6 +161,46 @@ function relevanceBar(score) {
     }
   });
 
+  // NEW: Save application (POST to SAVE_APPLICATION_URL)
+  card.querySelector("#appliedBtn").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+
+    try {
+      const payload = {
+        id: jobId,
+        job,                        // full job object as received
+        cover_letter: ta.value,     // edited/suggested text
+        applied_at: new Date().toISOString()
+      };
+
+      const res = await fetch(SAVE_APPLICATION_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const msg = `Save failed (${res.status})`;
+        throw new Error(msg);
+      }
+
+      toast("Application saved.");
+      btn.textContent = "Saved ✓";
+    } catch (err) {
+      console.error(err);
+      toast("Could not save application.");
+      btn.textContent = original;
+      btn.disabled = false;
+      return;
+    }
+
+    // Re-enable after a short delay in case user wants to re-save
+    setTimeout(() => { btn.disabled = false; }, 1200);
+  });
+
   empty.style.display = "none";
   card.style.display = "block";
 })();
@@ -220,13 +264,6 @@ async function buildAndDownloadPdf({ coverText, title, company, fileName = "cove
       y -= lineGap;
     }
     y -= lineGap * 0.5; // paragraph spacing
-  }
-
-  // Signature block
-  if (y < margin + lineGap * 3) {
-    page = pdfDoc.addPage([595.28, 841.89]);
-    ({ width, height } = page.getSize());
-    y = height - margin;
   }
 
   // Save + download with explicit filename
