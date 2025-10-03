@@ -71,7 +71,6 @@ function renderJobCard(job, idx) {
         </div>
       </div>
 
-      <a class="ghost" href="${applyUrl}" target="_blank" rel="noopener noreferrer" title="Apply (opens new tab)">Apply</a>
     </div>
 
     <div style="margin:12px 0 6px;">

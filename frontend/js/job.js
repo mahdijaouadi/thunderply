@@ -3,6 +3,7 @@
    - Copy to clipboard
    - Download a real PDF named "cover_letter.pdf" using pdf-lib (loaded on demand)
 */
+const SAVE_APPLICATION_URL  = "http://localhost:8328/api/v1/jobs/save_application"; // POST
 
 function getQueryParam(name) {
   const params = new URLSearchParams(window.location.search);
@@ -227,11 +228,6 @@ async function buildAndDownloadPdf({ coverText, title, company, fileName = "cove
     ({ width, height } = page.getSize());
     y = height - margin;
   }
-  page.drawText("Sincerely,", { x: margin, y, size: bodySize, font: times, color: rgb(0, 0, 0) });
-  y -= lineGap * 1.2;
-  page.drawText("__________________________", { x: margin, y, size: bodySize, font: times, color: rgb(0, 0, 0) });
-  y -= lineGap;
-  page.drawText("Your Name", { x: margin, y, size: bodySize, font: times, color: rgb(0, 0, 0) });
 
   // Save + download with explicit filename
   const pdfBytes = await pdfDoc.save();
