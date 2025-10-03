@@ -1,0 +1,41 @@
+[project]
+name = "thunderply"
+version = "0.1.0"
+description = "no description for the moment"
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastapi",
+    "requests",
+    "uvicorn",
+    "python-dotenv",
+    "numpy",
+    "lxml",
+    "httpx",
+    "anyio",
+    "Jinja2",
+    "langchain",
+    "langchain-core",
+    "langchain-google-genai",
+    "langchain-google-vertexai",
+    "langchain-community",
+    "langchain_openai",
+    "langgraph",
+    "langfuse",
+    "cloudscraper",
+    "beautifulsoup4",
+    "google-cloud-aiplatform",
+    "google-auth",
+    "pypdf",
+    "ruff",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"

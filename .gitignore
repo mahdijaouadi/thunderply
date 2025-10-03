@@ -207,3 +207,7 @@ marimo/_lsp/
 __marimo__/
 notebooks/
 user_information/
+
+#uv
+uv.lock
+uv.toml

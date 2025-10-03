@@ -69,7 +69,7 @@ class HiringCafeJobPostsRepository:
 
 
 
-    async def get_cover_letter(self,job_posts:List[JobPost]) -> List[JobPost]:
+    async def get_cover_letter(self, job_posts:List[JobPost]) -> List[JobPost]:
         workflow=JobPostCoverLetterWorkflow()
         for i in range(len(job_posts)):
             job_posts[i].cover_letter= await workflow.job_post_to_coverletter(job_post=job_posts[i])
