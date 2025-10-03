@@ -58,7 +58,7 @@ class HiringCafeJobPostsRepository:
 
         return job_posts
     async def get_relevance_score(self,job_posts:List[JobPost], top_k: int) -> List[JobPost]:
-        job_posts=job_posts[:1]
+        job_posts=job_posts[:20]
         workflow=JobPostScorerWorkflow()
         for i in range(len(job_posts)):
             relevance_score= await workflow.job_post_to_score(job_post=job_posts[i])
@@ -128,5 +128,9 @@ class HiringCafeJobPostsRepository:
         collection=db["pendingjobs"]
         cursor=collection.find()
         applications=list(cursor)
+        new_applications=[]
+        for application in applications:
+            application.pop('_id', None)
+            new_applications.append(application)
         client.close()
-        return applications
+        return new_applications

@@ -37,7 +37,7 @@ async def save_application(application: dict):
 
 
 @router.get("/load_application")
-async def load_application(application: dict):
+async def load_application():
     service = LoadApplication(uow_factory=uow_factory, logger=StdLogger())
-    result = await service.run(application)
+    result = await service.run()
     return result

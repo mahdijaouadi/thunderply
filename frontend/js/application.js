@@ -74,7 +74,6 @@ function relevanceBar(score) {
           <span>Applied: ${appliedDate}</span>
         </div>
       </div>
-      <a class="cta" href="${applyUrl}" target="_blank" rel="noopener noreferrer">Apply</a>
     </header>
 
     <section style="margin:16px 0 10px;">

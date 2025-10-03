@@ -6,7 +6,7 @@ class SearchJobs:
     def __init__(self, uow_factory: UnitOfWork,logger:Logger):
         self._uow_factory = uow_factory
         self._logger=logger
-        self.top_k=2
+        self.top_k=5
 
     async def run(self) -> List[JobPost]:
         async with self._uow_factory() as uow:
@@ -56,7 +56,7 @@ class LoadApplication:
         self._uow_factory = uow_factory
         self._logger=logger
 
-    async def run(self,application) -> List[JobPost]:
+    async def run(self) -> List[JobPost]:
         async with self._uow_factory() as uow:
-            applications= await uow.job_posts_repository.load_application(application)
+            applications= await uow.job_posts_repository.load_application()
         return applications
