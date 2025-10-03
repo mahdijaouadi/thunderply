@@ -112,3 +112,21 @@ class HiringCafeJobPostsRepository:
 
             client.close()
             return "cleared"
+    async def save_application(self,application) -> str:
+        mongo_db_uri=settings.mongo_db_uri
+        client=MongoClient(mongo_db_uri)
+        db=client["appdb"]
+        collection=db["pendingjobs"]
+        collection.insert_one(application)
+        client.close()
+        return "Application Saved"
+    
+    async def load_application(self) -> List[JobPost]:
+        mongo_db_uri=settings.mongo_db_uri
+        client=MongoClient(mongo_db_uri)
+        db=client["appdb"]
+        collection=db["pendingjobs"]
+        cursor=collection.find()
+        applications=list(cursor)
+        client.close()
+        return applications

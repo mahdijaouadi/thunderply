@@ -38,3 +38,25 @@ class ClearLatestResults:
         async with self._uow_factory() as uow:
             await uow.job_posts_repository.clear_latest_results()
         return {"status":"Cleared"}
+    
+class SaveApplication:
+    def __init__(self, uow_factory: UnitOfWork,logger:Logger):
+        self._uow_factory = uow_factory
+        self._logger=logger
+
+    async def run(self,application) -> List[JobPost]:
+        async with self._uow_factory() as uow:
+            await uow.job_posts_repository.save_application(application)
+        return {"status":"Application saved"}
+    
+
+
+class LoadApplication:
+    def __init__(self, uow_factory: UnitOfWork,logger:Logger):
+        self._uow_factory = uow_factory
+        self._logger=logger
+
+    async def run(self,application) -> List[JobPost]:
+        async with self._uow_factory() as uow:
+            applications= await uow.job_posts_repository.load_application(application)
+        return applications
