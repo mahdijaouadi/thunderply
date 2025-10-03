@@ -5,10 +5,12 @@ import os
 import json
 from backend.src.adapters.outbound.agents.relevance_scorer.workflow import JobPostScorerWorkflow
 from backend.src.adapters.outbound.agents.cover_letter_writer.workflow import JobPostCoverLetterWorkflow
-
+from backend.src.config.settings import settings
+from pymongo import MongoClient
+from dataclasses import asdict
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-class JobPostsRepository:
+class HiringCafeJobPostsRepository:
     async def get_job_posts(self) -> List[JobPost]:
 
         URL = "https://hiring.cafe/api/search-jobs"
@@ -72,3 +74,41 @@ class JobPostsRepository:
         for i in range(len(job_posts)):
             job_posts[i].cover_letter= await workflow.job_post_to_coverletter(job_post=job_posts[i])
         return job_posts
+    
+    async def get_latest_results(self) -> List[JobPost]:
+        mongo_db_uri=settings.mongo_db_uri
+        client=MongoClient(mongo_db_uri)
+        db=client["appdb"]
+        collection=db["searchresults"]
+        cursor=collection.find()
+        job_posts_docs=list(cursor)
+        client.close()
+        job_posts: List[JobPost] = []
+        for doc in job_posts_docs:
+            job_posts.append(JobPost(
+                job_information=doc.get("job_information", {}),
+                apply_url=doc.get("apply_url") or doc.get("applyUrl"),
+                company_name=doc.get("company_name", "Unknown Company"),
+                score=doc.get("score", 0),
+                cover_letter=doc.get("cover_letter", "")
+            ))
+        return job_posts
+    
+    async def save_job_posts(self,job_posts:List[JobPost]) -> str:
+        mongo_db_uri=settings.mongo_db_uri
+        client=MongoClient(mongo_db_uri)
+        db=client["appdb"]
+        collection=db["searchresults"]
+        collection.insert_many([asdict(job_post) for job_post in job_posts])
+        client.close()
+        return "saved"
+    async def clear_latest_results(self) -> str:
+            mongo_db_uri = settings.mongo_db_uri
+            client = MongoClient(mongo_db_uri)
+            db = client["appdb"]
+            collection = db["searchresults"]
+
+            collection.delete_many({})
+
+            client.close()
+            return "cleared"

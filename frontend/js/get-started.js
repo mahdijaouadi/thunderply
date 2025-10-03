@@ -9,6 +9,7 @@
 // --- Configure your endpoints here ---
 const LAUNCH_SEARCH_URL = "http://localhost:8328/api/v1/jobs/launch_search_jobs"; // POST to trigger a new search
 const LATEST_RESULTS_URL = "http://localhost:8328/api/v1/jobs/latest_results";    // GET to fetch last saved results (Mongo)
+const CLEAR_RESULTS_URL= "http://localhost:8328/api/v1/jobs/clear_latest_results" // POST
 const USE_MOCK = !LAUNCH_SEARCH_URL || !LATEST_RESULTS_URL;
 
 // --- DOM elements ---
@@ -20,18 +21,23 @@ const statusEl   = document.getElementById("status");
 const sectionEl  = document.getElementById("resultsSection");
 
 // --- Helpers ---
-function setBusy(isBusy, message = "") {
+async function setBusy(isBusy, message = "") {
   sectionEl.setAttribute("aria-busy", String(isBusy));
   statusEl.textContent = message;
 }
 
-function clearResults() {
+async function clearResults() {
+  const res = await fetch(CLEAR_RESULTS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({})
+  });
   resultsEl.innerHTML = "";
   statusEl.textContent = "";
 }
 
 // Normalize relevance score to a percentage (supports 0..1 or 0..10 or already-percent)
-function toPercent(score) {
+async function toPercent(score) {
   const n = Number(score) || 0;
   if (n <= 1)   return Math.round(n * 100);  // 0..1
   if (n <= 10)  return Math.round(n * 10);   // 0..10
@@ -39,7 +45,7 @@ function toPercent(score) {
   return 100;
 }
 
-function relevanceBar(score) {
+async function relevanceBar(score) {
   const pct = toPercent(score);
   return `
     <div style="width:100%;height:8px;border-radius:999px;background:#1a1e2a;border:1px solid rgba(231,236,245,0.08);overflow:hidden;">
@@ -49,7 +55,7 @@ function relevanceBar(score) {
 }
 
 // Renders one job card
-function renderJobCard(job, idx) {
+async function renderJobCard(job, idx) {
   const info    = job.job_information || {};
   const title   = info.title || job.title || "Untitled Role";
   const company = info.company || job.company_name || job.company || "Unknown Company";
@@ -113,7 +119,7 @@ function renderJobCard(job, idx) {
 }
 
 // Save to sessionStorage and route to job.html
-function openJobDetails(id, jobData) {
+async function openJobDetails(id, jobData) {
   try {
     const key = `thunderply-job-${id}`;
     sessionStorage.setItem(key, JSON.stringify(jobData));
@@ -127,8 +133,8 @@ function openJobDetails(id, jobData) {
 // --- Data loaders ---
 // Load latest results from MongoDB
 async function loadLatestResults({announce = true} = {}) {
-  clearResults();
-  setBusy(true, announce ? "Loading your latest results…" : "");
+  // clearResults();
+  await setBusy(true, announce ? "Loading your latest results…" : "");
 
   try {
     let data = [];
@@ -154,13 +160,13 @@ async function loadLatestResults({announce = true} = {}) {
     console.error(err);
     statusEl.textContent = "Could not load latest results.";
   } finally {
-    setBusy(false);
+    await setBusy(false);
   }
 }
 
 // Trigger a fresh search on the backend, then reload from Mongo
 async function runSearchAndReload() {
-  setBusy(true, "Searching jobs…");
+  await setBusy(true, "Searching jobs…");
 
   try {
     if (USE_MOCK) {
@@ -170,10 +176,7 @@ async function runSearchAndReload() {
       const res = await fetch(LAUNCH_SEARCH_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          // Put your real query parameters here, e.g.:
-          // skills: ["javascript","node"], location: "remote"
-        })
+        body: JSON.stringify({})
       });
       if (!res.ok) throw new Error(`Launch-search API error ${res.status}`);
       // Optionally: await res.json(); // if your API returns metadata
@@ -186,12 +189,12 @@ async function runSearchAndReload() {
     console.error(err);
     statusEl.textContent = "Search failed. Please try again.";
   } finally {
-    setBusy(false);
+    await setBusy(false);
   }
 }
 
 // --- Mock data (same shape you’re using) ---
-function mockJobs() {
+async function mockJobs() {
   return [
     {
       id: "mock-1",
@@ -236,11 +239,10 @@ function mockJobs() {
 }
 
 // --- Wire up ---
-document.addEventListener("DOMContentLoaded", () => {
-  // Always load latest saved results on first paint
-  loadLatestResults();
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadLatestResults();
 });
 
-searchBtn.addEventListener("click", runSearchAndReload);
-refreshBtn.addEventListener("click", () => loadLatestResults({announce: true}));
-clearBtn.addEventListener("click", clearResults);
+searchBtn.addEventListener("click", async () => await runSearchAndReload);
+refreshBtn.addEventListener("click", async () => await loadLatestResults({announce: true}));
+clearBtn.addEventListener("click", async () =>  await clearResults);

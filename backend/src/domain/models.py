@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 @dataclass
 class JobPost:
-    job_information: str
+    job_information: dict
     apply_url:str
     company_name: str
     score: int
