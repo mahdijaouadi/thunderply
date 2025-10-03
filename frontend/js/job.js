@@ -1,7 +1,7 @@
-/* Thunderply — Job Details page (single-print version)
+/* Thunderply — Job Details page (direct PDF download)
    - Editable cover letter (autosave to session for this job)
    - Copy to clipboard
-   - Download PDF via hidden iframe (no popup blocker), single print call
+   - Download a real PDF named "cover_letter.pdf" using pdf-lib (loaded on demand)
 */
 
 function getQueryParam(name) {
@@ -140,23 +140,153 @@ function relevanceBar(score) {
     toast("Reset to suggested text.");
   });
 
-  // Download PDF (hidden iframe => print dialog => Save as PDF)
-  card.querySelector("#downloadPdfBtn").addEventListener("click", () => {
-    const html = buildPrintHTML({
-      coverText: ta.value,
-      title,
-      company
-    });
-    printHTMLviaIframe(html);
+  // Download PDF (real file named cover_letter.pdf)
+  card.querySelector("#downloadPdfBtn").addEventListener("click", async () => {
+    try {
+      await buildAndDownloadPdf({
+        coverText: ta.value,
+        title,
+        company,
+        fileName: "cover_letter.pdf"
+      });
+      toast("Downloading cover_letter.pdf…");
+    } catch (e) {
+      console.error(e);
+      toast("Download failed.");
+    }
   });
 
   empty.style.display = "none";
   card.style.display = "block";
 })();
 
-/* -------- Utilities -------- */
+/* -------- PDF generation (client-side) -------- */
 
-// Simple toast
+// Load pdf-lib on demand (no frameworks)
+async function ensurePdfLib() {
+  if (window.PDFLib) return window.PDFLib;
+  await new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js";
+    s.onload = resolve;
+    s.onerror = () => reject(new Error("Failed to load pdf-lib"));
+    document.head.appendChild(s);
+  });
+  return window.PDFLib;
+}
+
+async function buildAndDownloadPdf({ coverText, title, company, fileName = "cover_letter.pdf" }) {
+  const { PDFDocument, StandardFonts, rgb } = await ensurePdfLib();
+
+  const pdfDoc = await PDFDocument.create();
+  const times = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+  const timesBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+
+  // A4 page
+  let page = pdfDoc.addPage([595.28, 841.89]);
+  let { width, height } = page.getSize();
+  const margin = 56; // ~0.78in
+  let y = height - margin;
+
+  // Header
+  const headerSize = 18;
+  page.drawText("Cover Letter", { x: margin, y, size: headerSize, font: timesBold, color: rgb(0, 0, 0) });
+  y -= headerSize + 6;
+
+  const today = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+  const subline = `${title} — ${company}`;
+  const subSize = 12;
+  page.drawText(subline, { x: margin, y, size: subSize, font: times, color: rgb(0.3, 0.3, 0.3) });
+  const dateWidth = times.widthOfTextAtSize(today, subSize);
+  page.drawText(today, { x: width - margin - dateWidth, y, size: subSize, font: times, color: rgb(0.3, 0.3, 0.3) });
+  y -= 18;
+
+  // Body
+  const bodySize = 12;
+  const lineGap = 14;
+  const maxWidth = width - margin * 2;
+
+  const paragraphs = (coverText || "").replace(/\r\n/g, "\n").split("\n");
+  for (const para of paragraphs) {
+    const lines = wrapText(para, times, bodySize, maxWidth);
+    for (const line of lines) {
+      if (y < margin + bodySize) {
+        page = pdfDoc.addPage([595.28, 841.89]);
+        ({ width, height } = page.getSize());
+        y = height - margin;
+      }
+      page.drawText(line, { x: margin, y, size: bodySize, font: times, color: rgb(0, 0, 0) });
+      y -= lineGap;
+    }
+    y -= lineGap * 0.5; // paragraph spacing
+  }
+
+  // Signature block
+  if (y < margin + lineGap * 3) {
+    page = pdfDoc.addPage([595.28, 841.89]);
+    ({ width, height } = page.getSize());
+    y = height - margin;
+  }
+  page.drawText("Sincerely,", { x: margin, y, size: bodySize, font: times, color: rgb(0, 0, 0) });
+  y -= lineGap * 1.2;
+  page.drawText("__________________________", { x: margin, y, size: bodySize, font: times, color: rgb(0, 0, 0) });
+  y -= lineGap;
+  page.drawText("Your Name", { x: margin, y, size: bodySize, font: times, color: rgb(0, 0, 0) });
+
+  // Save + download with explicit filename
+  const pdfBytes = await pdfDoc.save();
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName; // <-- exact file name
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// Simple word-wrap for pdf-lib text
+function wrapText(text, font, size, maxWidth) {
+  if (!text) return [""];
+  const words = text.split(/\s+/);
+  const lines = [];
+  let line = "";
+
+  for (const word of words) {
+    const proposal = line ? `${line} ${word}` : word;
+    if (font.widthOfTextAtSize(proposal, size) <= maxWidth) {
+      line = proposal;
+    } else {
+      if (line) lines.push(line);
+      // If the word itself is longer than the max width, hard-break it
+      if (font.widthOfTextAtSize(word, size) > maxWidth) {
+        let buf = "";
+        for (const ch of word) {
+          const test = buf + ch;
+          if (font.widthOfTextAtSize(test, size) > maxWidth) {
+            if (buf) lines.push(buf);
+            buf = ch;
+          } else {
+            buf = test;
+          }
+        }
+        if (buf) {
+          line = buf; // start next line with remainder
+        } else {
+          line = "";
+        }
+      } else {
+        line = word;
+      }
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/* -------- UI helpers -------- */
+
 function toast(msg) {
   const el = document.createElement("div");
   el.textContent = msg;
@@ -167,84 +297,4 @@ function toast(msg) {
   `;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 1400);
-}
-
-// Build print-ready HTML (A4) — **no inline print script here**
-function buildPrintHTML({ coverText, title, company }) {
-  const today = new Date().toLocaleDateString(undefined, {
-    year: "numeric", month: "long", day: "numeric"
-  });
-
-  const esc = (s) => (s || "")
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-  const coverHTML = esc(coverText).replace(/\n/g, "<br>");
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Cover Letter — ${esc(company)} — ${esc(title)}</title>
-  <style>
-    @page { size: A4; margin: 22mm; }
-    body { font: 12pt/1.6 -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #111; }
-    .letter { max-width: 720px; margin: 0 auto; }
-    .hdr { display:flex; justify-content: space-between; align-items:flex-start; gap: 12px; margin-bottom: 18px; }
-    .name { font-size: 18pt; font-weight: 700; }
-    .muted { color: #555; }
-    h1 { font-size: 14pt; margin: 0 0 8px; }
-    .section { margin: 16px 0; }
-    .sig { margin-top: 18px; }
-    .rule { height: 1px; background: #ddd; border:0; margin: 12px 0 16px; }
-  </style>
-</head>
-<body>
-  <article class="letter">
-    <div class="hdr">
-      <div>
-        <div class="name">Cover Letter</div>
-        <div class="muted">${esc(title)} — ${esc(company)}</div>
-      </div>
-      <div class="muted">${today}</div>
-    </div>
-    <hr class="rule" />
-    <div class="section">${coverHTML}</div>
-    <div class="sig">
-      <div class="muted">Sincerely,</div>
-      <div>__________________________</div>
-      <div>Your Name</div>
-    </div>
-  </article>
-</body>
-</html>`;
-}
-
-// Print the HTML through a hidden iframe (single print call, guarded)
-function printHTMLviaIframe(html) {
-  const iframe = document.createElement("iframe");
-  iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
-  iframe.style.border = "0";
-  document.body.appendChild(iframe);
-
-  const doc = iframe.contentDocument || iframe.contentWindow.document;
-  doc.open();
-  doc.write(html);
-  doc.close();
-
-  iframe.onload = () => {
-    // Guard against double onload events (some browsers)
-    if (iframe.dataset.printed === "1") return;
-    iframe.dataset.printed = "1";
-
-    try {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-    } finally {
-      setTimeout(() => iframe.remove(), 1000);
-    }
-  };
 }
