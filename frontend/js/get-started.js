@@ -1,15 +1,15 @@
 /* Thunderply — Get Started page logic (vanilla JS)
-   New workflow:
-   - On page load: fetch latest results from MongoDB (LATEST_RESULTS_URL) and render.
-   - On "Search Jobs": call launch endpoint (LAUNCH_SEARCH_URL), then load latest results again.
-   - Extra: "Refresh" button to manually reload Mongo latest results.
-   - Fallback to mock data if endpoints are empty or fail.
+   Workflow:
+   - On page load: fetch latest results (LATEST_RESULTS_URL) and render.
+   - On "Search Jobs": POST to LAUNCH_SEARCH_URL, then load latest results again.
+   - "Refresh": manually reload latest results.
+   - "Clear": POST to CLEAR_RESULTS_URL and clear UI.
 */
 
 // --- Configure your endpoints here ---
-const LAUNCH_SEARCH_URL = "http://localhost:8328/api/v1/jobs/launch_search_jobs"; // POST to trigger a new search
-const LATEST_RESULTS_URL = "http://localhost:8328/api/v1/jobs/latest_results";    // GET to fetch last saved results (Mongo)
-const CLEAR_RESULTS_URL= "http://localhost:8328/api/v1/jobs/clear_latest_results" // POST
+const LAUNCH_SEARCH_URL  = "http://localhost:8328/api/v1/jobs/launch_search_jobs"; // POST
+const LATEST_RESULTS_URL = "http://localhost:8328/api/v1/jobs/latest_results";    // GET
+const CLEAR_RESULTS_URL  = "http://localhost:8328/api/v1/jobs/clear_latest_results"; // POST
 const USE_MOCK = !LAUNCH_SEARCH_URL || !LATEST_RESULTS_URL;
 
 // --- DOM elements ---
@@ -20,24 +20,14 @@ const resultsEl  = document.getElementById("results");
 const statusEl   = document.getElementById("status");
 const sectionEl  = document.getElementById("resultsSection");
 
-// --- Helpers ---
-async function setBusy(isBusy, message = "") {
+// --- Helpers (sync) ---
+function setBusy(isBusy, message = "") {
   sectionEl.setAttribute("aria-busy", String(isBusy));
   statusEl.textContent = message;
 }
 
-async function clearResults() {
-  const res = await fetch(CLEAR_RESULTS_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({})
-  });
-  resultsEl.innerHTML = "";
-  statusEl.textContent = "";
-}
-
 // Normalize relevance score to a percentage (supports 0..1 or 0..10 or already-percent)
-async function toPercent(score) {
+function toPercent(score) {
   const n = Number(score) || 0;
   if (n <= 1)   return Math.round(n * 100);  // 0..1
   if (n <= 10)  return Math.round(n * 10);   // 0..10
@@ -45,7 +35,7 @@ async function toPercent(score) {
   return 100;
 }
 
-async function relevanceBar(score) {
+function relevanceBar(score) {
   const pct = toPercent(score);
   return `
     <div style="width:100%;height:8px;border-radius:999px;background:#1a1e2a;border:1px solid rgba(231,236,245,0.08);overflow:hidden;">
@@ -54,11 +44,11 @@ async function relevanceBar(score) {
   `;
 }
 
-// Renders one job card
-async function renderJobCard(job, idx) {
-  const info    = job.job_information || {};
-  const title   = info.title || job.title || "Untitled Role";
-  const company = info.company || job.company_name || job.company || "Unknown Company";
+// Renders one job card (sync)
+function renderJobCard(job, idx) {
+  const info     = job.job_information || {};
+  const title    = info.title || job.title || "Untitled Role";
+  const company  = info.company || job.company_name || job.company || "Unknown Company";
   const applyUrl = job.apply_url || info.apply_url || "#";
   const score    = job.relevance_score ?? job.score ?? 0;
 
@@ -118,8 +108,8 @@ async function renderJobCard(job, idx) {
   resultsEl.appendChild(card);
 }
 
-// Save to sessionStorage and route to job.html
-async function openJobDetails(id, jobData) {
+// Save to sessionStorage and route to job.html (sync)
+function openJobDetails(id, jobData) {
   try {
     const key = `thunderply-job-${id}`;
     sessionStorage.setItem(key, JSON.stringify(jobData));
@@ -130,18 +120,19 @@ async function openJobDetails(id, jobData) {
   }
 }
 
-// --- Data loaders ---
-// Load latest results from MongoDB
-async function loadLatestResults({announce = true} = {}) {
-  // clearResults();
-  await setBusy(true, announce ? "Loading your latest results…" : "");
+// --- Data loaders (async) ---
+// Load latest results from backend (or mock)
+async function loadLatestResults({ announce = true } = {}) {
+  // Reset UI before rendering
+  resultsEl.innerHTML = "";
+  setBusy(true, announce ? "Loading your latest results…" : "");
 
   try {
     let data = [];
 
     if (USE_MOCK) {
       // Fallback preview without backend
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 300));
       data = mockJobs();
     } else {
       const res = await fetch(LATEST_RESULTS_URL, { method: "GET" });
@@ -160,41 +151,58 @@ async function loadLatestResults({announce = true} = {}) {
     console.error(err);
     statusEl.textContent = "Could not load latest results.";
   } finally {
-    await setBusy(false);
+    setBusy(false);
   }
 }
 
-// Trigger a fresh search on the backend, then reload from Mongo
+// Trigger a fresh search, then reload latest results
 async function runSearchAndReload() {
-  await setBusy(true, "Searching jobs…");
+  setBusy(true, "Searching jobs…");
 
   try {
     if (USE_MOCK) {
-      // Simulate a launch search call
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 600)); // simulate search time
     } else {
       const res = await fetch(LAUNCH_SEARCH_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        body: JSON.stringify({ /* add your real query here later */ })
       });
       if (!res.ok) throw new Error(`Launch-search API error ${res.status}`);
-      // Optionally: await res.json(); // if your API returns metadata
+      // Optionally inspect response here
     }
 
-    // Immediately reload from Mongo (you can add polling if your search is async/queued)
+    // Reload from Mongo (if your search is async on the server, add polling here)
     statusEl.textContent = "Refreshing results…";
-    await loadLatestResults({announce: false});
+    await loadLatestResults({ announce: false });
   } catch (err) {
     console.error(err);
     statusEl.textContent = "Search failed. Please try again.";
   } finally {
-    await setBusy(false);
+    setBusy(false);
   }
 }
 
-// --- Mock data (same shape you’re using) ---
-async function mockJobs() {
+// Clear results (server + UI)
+async function clearResults() {
+  try {
+    if (!USE_MOCK && CLEAR_RESULTS_URL) {
+      await fetch(CLEAR_RESULTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      });
+    }
+  } catch (e) {
+    console.error("Clear results failed:", e);
+  } finally {
+    resultsEl.innerHTML = "";
+    statusEl.textContent = "Results cleared.";
+  }
+}
+
+// --- Mock data (sync) ---
+function mockJobs() {
   return [
     {
       id: "mock-1",
@@ -239,10 +247,18 @@ async function mockJobs() {
 }
 
 // --- Wire up ---
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadLatestResults();
+document.addEventListener("DOMContentLoaded", () => {
+  loadLatestResults();
 });
 
-searchBtn.addEventListener("click", async () => await runSearchAndReload);
-refreshBtn.addEventListener("click", async () => await loadLatestResults({announce: true}));
-clearBtn.addEventListener("click", async () =>  await clearResults);
+searchBtn.addEventListener("click", () => {
+  runSearchAndReload();
+});
+
+refreshBtn.addEventListener("click", () => {
+  loadLatestResults({ announce: true });
+});
+
+clearBtn.addEventListener("click", () => {
+  clearResults();
+});
