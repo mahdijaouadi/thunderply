@@ -173,3 +173,34 @@ body{
   .reveal{ opacity: 0; transform: translateY(12px); transition: opacity 600ms ease, transform 600ms ease; }
   .reveal.show{ opacity: 1; transform: none; }
 }
+
+
+/* Cover letter action row */
+.letter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.letter-actions__buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Big, comfortable editor */
+.letter-editor {
+  width: 100%;
+  min-height: 320px;              /* bigger by default */
+  line-height: 1.55;
+  background: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--text), transparent 88%);
+  border-radius: 12px;
+  padding: 12px;
+  color: var(--text);
+  resize: vertical;               /* allow manual resize too */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.98rem;
+}

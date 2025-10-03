@@ -1,8 +1,8 @@
 /* Thunderply — Job Details page
-   Enhancements:
-   - Editable cover letter (autosave to session for this job)
-   - "Copy" cover letter to clipboard
-   - "Download PDF" opens a print-ready view (use "Save as PDF")
+   Fixes:
+   - Download PDF uses hidden iframe (avoids popup blocking)
+   - Cover letter editor larger + autosize
+   - Copy + Reset still work; edits persist per job
 */
 
 function getQueryParam(name) {
@@ -11,7 +11,7 @@ function getQueryParam(name) {
 }
 
 function relevanceBar(score) {
-  const pct = Math.round((Number(score) || 0) * 10); // score expected on 0..10 scale
+  const pct = Math.round((Number(score) || 0) * 10); // score expected on 0..10
   return `
     <div style="width:100%;height:8px;border-radius:999px;background:#1a1e2a;border:1px solid rgba(231,236,245,0.08);overflow:hidden;">
       <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#7c5cff,#30e1ff);"></div>
@@ -79,9 +79,9 @@ function relevanceBar(score) {
     </section>
 
     <section style="margin:18px 0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div class="letter-actions">
         <h2 style="margin:0;">Suggested cover letter</h2>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="letter-actions__buttons">
           <button class="ghost" id="copyCoverBtn" title="Copy to clipboard">Copy</button>
           <button class="ghost" id="resetCoverBtn" title="Reset to suggested">Reset</button>
           <button class="btn-primary" id="downloadPdfBtn" title="Download as PDF">Download PDF</button>
@@ -89,19 +89,7 @@ function relevanceBar(score) {
       </div>
 
       <!-- Editable cover letter -->
-      <textarea id="coverText" rows="10" style="
-        width:100%;
-        margin-top:10px;
-        background:#0e1017;
-        border:1px solid rgba(231,236,245,0.08);
-        border-radius:12px;
-        padding:12px;
-        overflow:auto;
-        white-space:pre-wrap;
-        color:#e7ecf5;
-        resize:vertical;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      "></textarea>
+      <textarea id="coverText" class="letter-editor" placeholder="Write or edit your cover letter here..."></textarea>
       <small class="muted" style="display:block;margin-top:6px;">
         Tip: Edit freely. Changes are kept while this tab is open.
       </small>
@@ -117,16 +105,17 @@ function relevanceBar(score) {
   const ta = card.querySelector("#coverText");
   ta.value = cover;
 
-  // Autosize on input
+  // Autosize on input + good default height
   const autosize = () => {
     ta.style.height = "auto";
-    ta.style.height = (ta.scrollHeight + 2) + "px";
+    ta.style.height = Math.max(ta.scrollHeight + 2, 320) + "px"; // never below 320px
   };
   autosize();
   ta.addEventListener("input", () => {
     sessionStorage.setItem(coverStorageKey, ta.value);
     autosize();
   });
+  window.addEventListener("resize", autosize);
 
   // Copy to clipboard
   card.querySelector("#copyCoverBtn").addEventListener("click", async () => {
@@ -134,9 +123,7 @@ function relevanceBar(score) {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(ta.value);
       } else {
-        // Fallback
-        ta.select();
-        document.execCommand("copy");
+        ta.select(); document.execCommand("copy");
         ta.setSelectionRange(ta.value.length, ta.value.length);
       }
       toast("Cover letter copied.");
@@ -154,22 +141,23 @@ function relevanceBar(score) {
     toast("Reset to suggested text.");
   });
 
-  // Download PDF (print-friendly)
+  // Download PDF (hidden iframe => print dialog => Save as PDF)
   card.querySelector("#downloadPdfBtn").addEventListener("click", () => {
-    openPrintView({
+    const html = buildPrintHTML({
       coverText: ta.value,
       title,
       company
     });
+    printHTMLviaIframe(html);
   });
 
   empty.style.display = "none";
   card.style.display = "block";
 })();
 
-/* ---- Utils ---- */
+/* -------- Utilities -------- */
 
-// Tiny toast (non-blocking feedback)
+// Simple toast
 function toast(msg) {
   const el = document.createElement("div");
   el.textContent = msg;
@@ -182,29 +170,25 @@ function toast(msg) {
   setTimeout(() => el.remove(), 1400);
 }
 
-// Open a print-ready window; user can Save as PDF
-function openPrintView({ coverText, title, company }) {
+// Build print-ready HTML (A4)
+function buildPrintHTML({ coverText, title, company }) {
   const today = new Date().toLocaleDateString(undefined, {
     year: "numeric", month: "long", day: "numeric"
   });
 
-  // Escape HTML special chars, then convert newlines to <br>
   const esc = (s) => (s || "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#39;");
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   const coverHTML = esc(coverText).replace(/\n/g, "<br>");
 
-  const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>Cover Letter — ${esc(company)} — ${esc(title)}</title>
   <style>
     @page { size: A4; margin: 22mm; }
-    body { font: 12pt/1.5 -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #111; }
+    body { font: 12pt/1.6 -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #111; }
     .letter { max-width: 720px; margin: 0 auto; }
     .hdr { display:flex; justify-content: space-between; align-items:flex-start; gap: 12px; margin-bottom: 18px; }
     .name { font-size: 18pt; font-weight: 700; }
@@ -225,24 +209,42 @@ function openPrintView({ coverText, title, company }) {
       <div class="muted">${today}</div>
     </div>
     <hr class="rule" />
-
     <div class="section">${coverHTML}</div>
-
     <div class="sig">
       <div class="muted">Sincerely,</div>
       <div>__________________________</div>
       <div>Your Name</div>
     </div>
   </article>
-
   <script>window.onload = () => { window.print(); }<\/script>
 </body>
 </html>`;
+}
 
-  const w = window.open("", "_blank", "noopener,noreferrer");
-  if (!w) return alert("Pop-up blocked. Please allow pop-ups for this site.");
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-  w.focus();
+// Print that HTML through a hidden iframe (avoids popup blocking)
+function printHTMLviaIframe(html) {
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open();
+  doc.write(html);
+  doc.close();
+
+  // Give the browser a tick to render, then print
+  iframe.onload = () => {
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } finally {
+      // remove iframe shortly after
+      setTimeout(() => iframe.remove(), 1000);
+    }
+  };
 }
